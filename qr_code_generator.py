@@ -82,7 +82,7 @@ def get_character_count_bits(version, mode):
             return 16
         elif mode == 'kanji':
             return 12
-    raise Exception('Invalid version and mode! Must be [1..40] ')
+    raise Exception('Invalid version and mode! Must be [1..40]')
 
 
 def get_gf256_table():
@@ -492,7 +492,7 @@ class QRCode(object):
                     if self.__reserved_matrix[self.pos_y - 1][self.pos_x + 1] != '#':
                         self.pos_x += 1
                         self.pos_y -= 1
-                    elif  self.__reserved_matrix[self.pos_y - 1][self.pos_x] != '#':
+                    elif self.__reserved_matrix[self.pos_y - 1][self.pos_x] != '#':
                         # if next module is unused - move there
                         self.pos_y -= 1
                     else:
@@ -716,7 +716,6 @@ class QRCode(object):
             full_data_bits += bin(error_correction_byte)[2:].zfill(bits_per_char)
 
         # skip addition of remainder bits, as all remainder bits are 0
-
 
     def __encode_data(self):
         """ Encode data """
