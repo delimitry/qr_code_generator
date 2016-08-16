@@ -25,7 +25,7 @@ def alphanumeric_to_binary(data):
                 'Alphanumeric mode support only alphanumeric characters "%s"!' %
                 ''.join(sorted(alphanumeric_table.keys())))
     result = ''
-    for i in xrange(0, (len(data) // 2) * 2, 2):
+    for i in range(0, (len(data) // 2) * 2, 2):
         if len(data[i:i + 2]) > 1:
             result += bin(45 * alphanumeric_table[data[i]] + alphanumeric_table[data[i + 1]])[2:].zfill(11)
         else:
@@ -42,7 +42,7 @@ def numeric_to_binary(data):
     if not data.isdigit():
         raise Exception('Numeric mode support only 0..9 characters!')
     result = ''
-    for i in xrange(0, len(data), 3):
+    for i in range(0, len(data), 3):
         bin_val = bin(int(data[i:i + 3], 10))[2:]
         if len(data[i:i + 3]) == 3:
             result += bin_val.zfill(10)
@@ -89,9 +89,9 @@ def get_gf256_table():
     """ Get GF(256) table """
     # fill GF(256) table
     m = 285  # 0b100011101
-    exp_a_table = {i: 2 ** i for i in xrange(8)}
+    exp_a_table = {i: 2 ** i for i in range(8)}
     exp_a_table[8] = 256 ^ m
-    for i in xrange(9, 255):
+    for i in range(9, 255):
         val = exp_a_table[i - 1] * 2
         exp_a_table[i] = val ^ m if val >= 256 else val
     return exp_a_table
@@ -102,7 +102,7 @@ def get_error_correction_data(data, version, error_correction_level):
     exp_a_table = get_gf256_table()
     # get inverted table
     inv_exp_a_table = {}
-    for k, v in exp_a_table.iteritems():
+    for k, v in exp_a_table.items():
         if v not in inv_exp_a_table:
             inv_exp_a_table[v] = k
 
@@ -121,10 +121,10 @@ def get_error_correction_data(data, version, error_correction_level):
     def calc_ecc(coeffs):
         """ Calc ECC """
         generator_polynomial = [
-            (p, ecc_per_block - i + len(coeffs) - 1) for i, p in enumerate(generator_polynomials.get(ecc_per_block))]
-        message_polynomial = [(c, ecc_per_block - i + len(coeffs) - 1) for i, c in enumerate(coeffs)]
+            (p, ecc_per_block - j + len(coeffs) - 1) for j, p in enumerate(generator_polynomials.get(ecc_per_block))]
+        message_polynomial = [(c, ecc_per_block - j + len(coeffs) - 1) for j, c in enumerate(coeffs)]
         # perform division steps number of terms in message_polynomial times
-        for _ in xrange(len(coeffs) + 1):
+        for _ in range(len(coeffs) + 1):
             if not (message_polynomial and message_polynomial[0]) or message_polynomial[0][1] < ecc_per_block:
                 break
             leading_term = message_polynomial[0][0]
@@ -139,7 +139,7 @@ def get_error_correction_data(data, version, error_correction_level):
             message_polynomial = [
                 (((0 if j >= len(message_polynomial) else message_polynomial[j][0]) ^
                   (0 if j >= len(result_gp) else result_gp[j][0])), message_polynomial[0][1] - j)
-                for j in xrange(max(ecc_per_block + 1, len(message_polynomial)))]
+                for j in range(max(ecc_per_block + 1, len(message_polynomial)))]
             # discard zero leading term
             while True:
                 if message_polynomial[0][0] != 0 or message_polynomial[0][1] < ecc_per_block:
@@ -149,18 +149,18 @@ def get_error_correction_data(data, version, error_correction_level):
         return [0] * (ecc_per_block - len(message_polynomial)) + [x[0] for x in message_polynomial]
 
     blocks_ecc = []
-    for _ in xrange(blocks_in_group_1):
+    for _ in range(blocks_in_group_1):
         sub_data = data[:codewords_in_group_1]
         sub_data_ecc = calc_ecc(sub_data)
         blocks_ecc.append(sub_data_ecc)
         data = data[codewords_in_group_1:]
-    for _ in xrange(blocks_in_group_2):
+    for _ in range(blocks_in_group_2):
         sub_data = data[:codewords_in_group_2]
         sub_data_ecc = calc_ecc(sub_data)
         blocks_ecc.append(sub_data_ecc)
         data = data[codewords_in_group_2:]
     result_ecc = []
-    for i in xrange(ecc_per_block):
+    for i in range(ecc_per_block):
         for block in blocks_ecc:
             if i < len(block):
                 result_ecc.append(block[i])
@@ -173,14 +173,14 @@ def get_matrix_with_quiet_zone(matrix, quiet_zone_size=4):
         raise Exception('Quiet zone size must be positive')
     size = len(matrix)
     res_matrix = []
-    for y in xrange(size + quiet_zone_size * 2):
+    for y in range(size + quiet_zone_size * 2):
         line = []
-        for x in xrange(size + quiet_zone_size * 2):
+        for x in range(size + quiet_zone_size * 2):
             line.append(' ')
         res_matrix.append(line)
     # copy matrix to new matrix with quiet zone
-    for y in xrange(len(matrix)):
-        for x in xrange(len(matrix[0])):
+    for y in range(len(matrix)):
+        for x in range(len(matrix[0])):
             res_matrix[quiet_zone_size + y][quiet_zone_size + x] = matrix[y][x]
     return res_matrix
 
@@ -210,14 +210,13 @@ class QRCode(object):
 
     def save(self, filename, module_size=1):
         """ Save QR code to filename """
-        matrix = self.matrix
         self.__encode_data()
         matrix = get_matrix_with_quiet_zone(self.matrix)
         size = len(matrix)
         image = Image.new('RGB', (size * module_size, size * module_size), 'white')
         image_draw = ImageDraw.Draw(image)
-        for y in xrange(len(matrix)):
-            for x in xrange(len(matrix[0])):
+        for y in range(len(matrix)):
+            for x in range(len(matrix[0])):
                 image_draw.rectangle(
                     (x * module_size, y * module_size, x * module_size + module_size, y * module_size + module_size),
                     fill=(0, 0, 0) if matrix[y][x] == '#' else (255, 255, 255))
@@ -231,11 +230,11 @@ class QRCode(object):
     def print_out(self):
         """ Print out QR code matrix """
         for line in self.matrix:
-            print ''.join(x for x in line)
+            print(''.join(x for x in line))
 
     def __find_suitable_matrix_size(self):
         """ Find suitable matrix size"""
-        for v in xrange(1, 41):
+        for v in range(1, 41):
             if capacity.get(v, {}).get(self.error_correction_level, {}).get(self.mode_name) >= len(self.data):
                 return 17 + v * 4
         raise Exception('Data too big to fit in one QR code!')
@@ -245,9 +244,9 @@ class QRCode(object):
         if (size - 21) % 4 != 0 or size < 21:
             raise Exception('Invalid QR code size! Must be [21, 25, ..., 177]')
         matrix = []
-        for _ in xrange(size):
+        for _ in range(size):
             line = []
-            for _ in xrange(size):
+            for __ in range(size):
                 line.append(' ')
             matrix.append(line)
         return matrix
@@ -256,31 +255,31 @@ class QRCode(object):
         """ Create and fill reserved matrix """
         reserved_matrix = self.__create_matrix(size)
         # add finder patterns
-        for y in xrange(9):
-            for x in xrange(9):
+        for y in range(9):
+            for x in range(9):
                 reserved_matrix[y][x] = '#'
                 reserved_matrix[y][size - 8 + x % 8] = '#'
                 reserved_matrix[size - 8 + y % 8][x] = '#'
         # add timing patterns
-        for i in xrange(8, size - 8, 1):
+        for i in range(8, size - 8, 1):
             reserved_matrix[6][i] = '#'
             reserved_matrix[i][6] = '#'
         if size < 25:
             return reserved_matrix
         index = (size - 25) / 4
         for pos in itertools.product(alignment_pattern_locations[index], repeat=2):
-            for y in xrange(5):
-                for x in xrange(5):
+            for y in range(5):
+                for x in range(5):
                     # skip alignment patterns near finder patterns
                     if (pos[0] == 6 and pos[1] == 6) or (pos[0] == 6 and pos[1] == size - 7) or \
-                        (pos[0] == size - 7 and pos[1] == 6):
+                            (pos[0] == size - 7 and pos[1] == 6):
                         continue
                     reserved_matrix[pos[1] - 2 + y][pos[0] - 2 + x] = '#'
         # add version info areas for QR codes version >= 7
         version = (len(reserved_matrix) - 17) / 4
         if version >= 7:
-            for i in xrange(6):
-                for j in xrange(3):
+            for i in range(6):
+                for j in range(3):
                     reserved_matrix[i][size - 8 - 3 + j] = '#'
                     reserved_matrix[size - 8 - 3 + j][i] = '#'
         return reserved_matrix
@@ -297,8 +296,8 @@ class QRCode(object):
             '#######',
         ]
         size = len(self.matrix)
-        for y in xrange(len(pattern)):
-            for x in xrange(len(pattern[0])):
+        for y in range(len(pattern)):
+            for x in range(len(pattern[0])):
                 self.matrix[y][x] = pattern[x][y]
                 self.matrix[y][size - len(pattern[0]) + x] = pattern[x][y]
                 self.matrix[size - len(pattern) + y][x] = pattern[x][y]
@@ -317,18 +316,18 @@ class QRCode(object):
         ]
         index = (size - 25) / 4
         for pos in itertools.product(alignment_pattern_locations[index], repeat=2):
-            for y in xrange(len(pattern)):
-                for x in xrange(len(pattern[0])):
+            for y in range(len(pattern)):
+                for x in range(len(pattern[0])):
                     # skip alignment patterns near finder patterns
                     if (pos[0] == 6 and pos[1] == 6) or (pos[0] == 6 and pos[1] == size - 7) or \
-                        (pos[0] == size - 7 and pos[1] == 6):
+                            (pos[0] == size - 7 and pos[1] == 6):
                         continue
                     self.matrix[pos[1] - len(pattern) / 2 + y][pos[0] - len(pattern[0]) / 2 + x] = pattern[x][y]
 
     def __add_timing_patterns(self):
         """ Add timing patterns """
         size = len(self.matrix)
-        for i in xrange(8, size - 8, 2):
+        for i in range(8, size - 8, 2):
             self.matrix[6][i] = '#'
             self.matrix[i][6] = '#'
 
@@ -355,13 +354,13 @@ class QRCode(object):
         final_format_string = bin(int(combined, 2) ^ int(mask_string, 2))[2:].zfill(15)
         # add format info to the QR code matrix
         index = 0
-        for i in xrange(9):
+        for i in range(9):
             if i == 6:
                 continue
             self.matrix[8][i] = '#' if final_format_string[index] == '1' else ' '
             self.matrix[i][8] = '#' if final_format_string[14 - index] == '1' else ' '
             index += 1
-        for i in xrange(8):
+        for i in range(8):
             if i < 7:
                 self.matrix[size - 1 - i][8] = '#' if final_format_string[i] == '1' else ' '
             self.matrix[8][size - 1 - i] = '#' if final_format_string[14 - i] == '1' else ' '
@@ -388,8 +387,8 @@ class QRCode(object):
                 break
         final_version_string = version_string + error_correction_string
         # add the final version string to the QR code
-        for i in xrange(6):
-            for j in xrange(3):
+        for i in range(6):
+            for j in range(3):
                 bit = final_version_string[len(final_version_string) - 1 - (i * 3 + j)]
                 self.matrix[i][size - 8 - 3 + j] = '#' if bit == '1' else ' '
                 self.matrix[size - 8 - 3 + j][i] = '#' if bit == '1' else ' '
@@ -477,7 +476,7 @@ class QRCode(object):
                     else:
                         # find unused module to the top
                         found = False
-                        for py in xrange(0, self.size, 1):
+                        for py in range(0, self.size, 1):
                             if self.__reserved_matrix[py][self.pos_x - 1] != '#':
                                 found = True
                                 self.pos_y = py
@@ -500,13 +499,13 @@ class QRCode(object):
                         found = False
                         found_x_1_y = self.pos_y
                         found_x_0_y = self.pos_y
-                        for py in xrange(self.pos_y - 1, -1, -1):
+                        for py in range(self.pos_y - 1, -1, -1):
                             if self.__reserved_matrix[py][self.pos_x + 1] != '#':
                                 found = True
                                 found_x_1_y = py
                                 break
                         # try self.pos_x
-                        for py in xrange(self.pos_y - 1, -1, -1):
+                        for py in range(self.pos_y - 1, -1, -1):
                             if self.__reserved_matrix[py][self.pos_x] != '#':
                                 found = True
                                 found_x_0_y = py
@@ -523,20 +522,20 @@ class QRCode(object):
                             if self.pos_x == self.size - 10:
                                 # try self.pos_x - 1
                                 if not found:
-                                    for py in xrange(self.pos_y - 1, -1, -1):
+                                    for py in range(self.pos_y - 1, -1, -1):
                                         if self.__reserved_matrix[py][self.pos_x - 1] != '#':
                                             found = True
                                             self.pos_x -= 1
                                             break
                                 # try self.pos_x - 2
                                 if not found:
-                                    for py in xrange(self.pos_y - 1, -1, -1):
+                                    for py in range(self.pos_y - 1, -1, -1):
                                         if self.__reserved_matrix[py][self.pos_x - 2] != '#':
                                             found = True
                                             self.pos_x -= 2
                                             break
                                 if found:
-                                    for py in xrange(self.pos_y - 1, -1, -1):
+                                    for py in range(self.pos_y - 1, -1, -1):
                                         if py == 6:
                                             continue
                                         if self.__reserved_matrix[py][self.pos_x] != '#':
@@ -570,7 +569,7 @@ class QRCode(object):
                     else:
                         # else find unused module to the top
                         found = False
-                        for py in xrange(self.pos_y - 1, -1, -1):
+                        for py in range(self.pos_y - 1, -1, -1):
                             if self.__reserved_matrix[py][self.pos_x - 1] != '#':
                                 found = True
                                 self.pos_y = py
@@ -593,12 +592,12 @@ class QRCode(object):
                         found = False
                         found_x_1_y = self.pos_y
                         found_x_0_y = self.pos_y
-                        for py in xrange(self.pos_y + 1, self.size, 1):
+                        for py in range(self.pos_y + 1, self.size, 1):
                             if self.__reserved_matrix[py][self.pos_x + 1] != '#':
                                 found = True
                                 found_x_1_y = py
                                 break
-                        for py in xrange(self.pos_y + 1, self.size, 1):
+                        for py in range(self.pos_y + 1, self.size, 1):
                             if self.__reserved_matrix[py][self.pos_x] != '#':
                                 found = True
                                 found_x_0_y = py
@@ -621,9 +620,9 @@ class QRCode(object):
         # add char to the matrix bit by bit
         bits = list(bin(ord(char))[2:].zfill(bits_num))
         while bits:
-            bit = bits.pop(0)
-            bit = apply_mask(bit, self.pos_x, self.pos_y, self.mask_number)
-            self.matrix[self.pos_y][self.pos_x] = '#' if bit == '1' else ' '
+            bit_str = bits.pop(0)
+            bit_str = apply_mask(bit_str, self.pos_x, self.pos_y, self.mask_number)
+            self.matrix[self.pos_y][self.pos_x] = '#' if bit_str == '1' else ' '
             if self.direction == 'up':
                 move_up()
             elif self.direction == 'down':
@@ -680,7 +679,7 @@ class QRCode(object):
             padding_index += 1
 
         # convert bits to bytes
-        data_bytes = [int(full_data_bits[i: i + 8], 2) for i in xrange(0, len(full_data_bits), 8)]
+        data_bytes = [int(full_data_bits[i: i + 8], 2) for i in range(0, len(full_data_bits), 8)]
 
         # prepare result data after interleaving group's blocks
         error_correction_info = error_correction.get(self.version, {}).get(self.error_correction_level, {})
@@ -690,17 +689,17 @@ class QRCode(object):
         codewords_in_group_2 = error_correction_info.get('codewords_in_group_2')
         data_blocks = []
         # group 1
-        for _ in xrange(blocks_in_group_1):
+        for _ in range(blocks_in_group_1):
             sub_data_bytes = data_bytes[:codewords_in_group_1]
             data_blocks.append(sub_data_bytes)
             data_bytes = data_bytes[codewords_in_group_1:]
         # group 2
-        for _ in xrange(blocks_in_group_2):
+        for _ in range(blocks_in_group_2):
             sub_data_bytes = data_bytes[:codewords_in_group_2]
             data_blocks.append(sub_data_bytes)
             data_bytes = data_bytes[codewords_in_group_2:]
         result_data = []
-        for i in xrange(max(codewords_in_group_1, codewords_in_group_2)):
+        for i in range(max(codewords_in_group_1, codewords_in_group_2)):
             for block in data_blocks:
                 if i < len(block):
                     result_data.append(block[i])
@@ -709,7 +708,7 @@ class QRCode(object):
             self.__add_char(chr(char), bits_per_char)
 
         # add error correction
-        data_bytes = [int(full_data_bits[i: i + 8], 2) for i in xrange(0, len(full_data_bits), 8)]
+        data_bytes = [int(full_data_bits[i: i + 8], 2) for i in range(0, len(full_data_bits), 8)]
         error_correction_data = get_error_correction_data(data_bytes, self.version, self.error_correction_level)
         for error_correction_byte in error_correction_data:
             self.__add_char(chr(error_correction_byte), bits_per_char)
@@ -730,7 +729,7 @@ class QRCode(object):
 def main():
     qr_code = QRCode(error_correction_level='L', mode_name='byte', mask_number=2, data='encoded message')
     qr_code.save('qr.png', module_size=2)
-    print 'result QR Code version: %d' % qr_code.version
+    print('result QR Code version: %d' % qr_code.version)
 
 
 if __name__ == '__main__':
